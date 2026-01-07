@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Arnold</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@picocss/pico@2/css/pico.min.css"
+    />
+
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [["\\\\(", "\\\\)"]],
+          displayMath: [["$$", "$$"]],
+        },
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+      .muted {
+        color: var(--pico-muted-color);
+      }
+
+      .topbar {
+        border-bottom: 1px solid var(--pico-muted-border-color);
+        background: var(--pico-background-color);
+      }
+
+      .topbar__inner {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        padding-block: 0.75rem;
+      }
+
+      .topbar__brand {
+        font-weight: 600;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .topbar__stats {
+        font-size: 0.95rem;
+        text-align: center;
+      }
+
+      main.container {
+        min-height: calc(100vh - 4rem);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-block: 3rem;
+      }
+
+      .study-pane {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      .study-card {
+        width: min(44rem, 100%);
+        text-align: center;
+        padding: 2.25rem 2.5rem;
+        border-radius: 16px;
+        border: 1px solid var(--pico-muted-border-color);
+        background: var(--pico-card-background-color);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .study-card {
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+        }
+      }
+
+      .study-card__deck {
+        margin-bottom: 1rem;
+        color: var(--pico-muted-color);
+        font-size: 0.95rem;
+      }
+
+      .study-card__text {
+        white-space: pre-wrap;
+        font-size: clamp(1.25rem, 2.2vw, 1.65rem);
+        line-height: 1.55;
+      }
+
+      .study-card__answer {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--pico-muted-border-color);
+      }
+
+      .button-row {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+      }
+
+      .button-row :is(button, a[role="button"]) {
+        padding: 0.65rem 0.9rem;
+        border-radius: 0.55rem;
+        font-weight: 600;
+      }
+
+      .button-row--ratings button {
+        flex: 1 1 0;
+        min-width: 6rem;
+      }
+
+      .button-row--solo :is(button, a[role="button"]) {
+        flex: 0 1 25%;
+        min-width: 6rem;
+      }
+
+      .btn-again {
+        background: #e55353;
+        border-color: #e55353;
+        color: #ffffff;
+      }
+
+      .btn-hard {
+        background: #6c757d;
+        border-color: #6c757d;
+        color: #ffffff;
+      }
+
+      .btn-good {
+        background: #2ea44f;
+        border-color: #2ea44f;
+        color: #ffffff;
+      }
+
+      .btn-easy {
+        background: #4c8bf5;
+        border-color: #4c8bf5;
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="container topbar__inner">
+        <a class="topbar__brand" href="{{ url_for('study') }}">Arnold</a>
+        <div id="topbar-stats" class="topbar__stats muted">
+          Due {{ due_count }} · New {{ new_count }} · Done {{ done_count }} / {{ total_count }}
+        </div>
+        <div></div>
+      </div>
+    </header>
+    <main class="container">
+      {% block content %}{% endblock %}
+    </main>
+
+    <script>
+      document.body.addEventListener("htmx:afterSwap", function (evt) {
+        if (window.MathJax && MathJax.typesetPromise) {
+          MathJax.typesetPromise([evt.target]);
+        }
+      });
+    </script>
+  </body>
+</html>

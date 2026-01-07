@@ -1,0 +1,59 @@
+{% if htmx %}
+  <div id="topbar-stats" class="topbar__stats muted" hx-swap-oob="true">
+    Due {{ due_count }} · New {{ new_count }} · Done {{ done_count }} / {{ total_count }}
+  </div>
+{% endif %}
+
+<div id="study-pane" class="study-pane">
+  <article class="study-card">
+    {% if card %}
+      <div class="study-card__deck">{{ card.deck_name }}</div>
+      <div class="study-card__text">{{ card.front }}</div>
+
+      {% if revealed %}
+        <div class="study-card__answer">
+          <div class="study-card__text">{{ card.back }}</div>
+
+          <form
+            method="post"
+            action="{{ url_for('rate') }}"
+            hx-post="{{ url_for('rate') }}"
+            hx-target="#study-pane"
+            hx-swap="outerHTML"
+          >
+            <input type="hidden" name="card_key" value="{{ card.key }}" />
+            <div class="button-row button-row--ratings">
+              <button class="btn-again" type="submit" name="rating" value="again">Again</button>
+              <button class="btn-hard" type="submit" name="rating" value="hard">Hard</button>
+              <button class="btn-good" type="submit" name="rating" value="good">Good</button>
+              <button class="btn-easy" type="submit" name="rating" value="easy">Easy</button>
+            </div>
+          </form>
+        </div>
+      {% else %}
+        <form
+          method="post"
+          action="{{ url_for('reveal') }}"
+          hx-post="{{ url_for('reveal') }}"
+          hx-target="#study-pane"
+          hx-swap="outerHTML"
+        >
+          <input type="hidden" name="card_key" value="{{ card.key }}" />
+          <div class="button-row button-row--solo">
+            <button type="submit">Show answer</button>
+          </div>
+        </form>
+      {% endif %}
+    {% else %}
+      <h3>No cards available</h3>
+      {% if next_due_str %}
+        <p class="muted">Next due at {{ next_due_str }}.</p>
+      {% else %}
+        <p class="muted">Nothing to study right now.</p>
+      {% endif %}
+      <div class="button-row button-row--solo">
+        <a role="button" href="{{ url_for('study') }}">Refresh</a>
+      </div>
+    {% endif %}
+  </article>
+</div>
