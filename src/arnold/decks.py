@@ -58,7 +58,9 @@ def load_deck(path: Path, *, deck_index: int) -> Deck:
         if cards_raw is None:
             errors.append("Missing required top-level field 'cards' (array).")
     else:
-        errors.append("Deck JSON must be an array of cards or an object with a 'cards' array.")
+        errors.append(
+            "Deck JSON must be an array of cards or an object with a 'cards' array."
+        )
 
     if errors:
         raise DeckValidationError(path=path, errors=tuple(errors))
@@ -104,7 +106,9 @@ def load_deck(path: Path, *, deck_index: int) -> Deck:
             card_id = str(raw_id)
         else:
             card_id = None
-            errors.append(f"Card {card_index}: field 'id' must be a string or int when provided.")
+            errors.append(
+                f"Card {card_index}: field 'id' must be a string or int when provided."
+            )
 
         tags_raw = raw.get("tags", [])
         tags: tuple[str, ...] = ()
@@ -113,7 +117,9 @@ def load_deck(path: Path, *, deck_index: int) -> Deck:
         elif isinstance(tags_raw, list) and all(isinstance(t, str) for t in tags_raw):
             tags = tuple(tags_raw)
         else:
-            errors.append(f"Card {card_index}: field 'tags' must be a list of strings when provided.")
+            errors.append(
+                f"Card {card_index}: field 'tags' must be a list of strings when provided."
+            )
 
         if card_id is not None:
             first_seen = seen_ids.get(card_id)
@@ -153,4 +159,3 @@ def load_decks(paths: list[Path]) -> tuple[list[Deck], list[DeckValidationError]
         except DeckValidationError as e:
             failures.append(e)
     return decks, failures
-

@@ -14,7 +14,9 @@ def unix_now() -> int:
 
 
 def default_state(*, now: int) -> CardState:
-    return CardState(due=now, interval_days=0.0, ease_factor=DEFAULT_EASE, repetitions=0)
+    return CardState(
+        due=now, interval_days=0.0, ease_factor=DEFAULT_EASE, repetitions=0
+    )
 
 
 def apply_rating(*, existing: CardState | None, rating: Rating, now: int) -> CardState:
@@ -61,10 +63,14 @@ def apply_rating(*, existing: CardState | None, rating: Rating, now: int) -> Car
     else:  # pragma: no cover
         raise ValueError(f"Unknown rating: {rating}")
 
-    return CardState(due=due, interval_days=interval, ease_factor=ease, repetitions=reps)
+    return CardState(
+        due=due, interval_days=interval, ease_factor=ease, repetitions=reps
+    )
 
 
-def select_next(*, decks: Iterable[Deck], state: dict[str, CardState], now: int) -> Selection:
+def select_next(
+    *, decks: Iterable[Deck], state: dict[str, CardState], now: int
+) -> Selection:
     all_cards = [card for deck in decks for card in deck.cards]
 
     due_candidates: list[tuple[int, tuple[int, int], Card]] = []

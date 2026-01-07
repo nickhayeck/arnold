@@ -80,4 +80,3 @@ class Selection:
     new_count: int
     total_count: int
     next_due: int | None
-

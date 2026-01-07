@@ -101,7 +101,9 @@ def create_app(
         htmx = _is_htmx_request()
         card = revealed_card if revealed else selection.card
         next_due_str = (
-            _format_local_time(selection.next_due) if selection.next_due is not None else None
+            _format_local_time(selection.next_due)
+            if selection.next_due is not None
+            else None
         )
 
         template = "study_pane.html" if htmx else "study.html"
@@ -120,7 +122,9 @@ def create_app(
     def current_snapshot() -> tuple[Selection, int]:
         now = cfg.now_fn()
         with cfg.state_lock:
-            selection = select_next(decks=cfg.decks, state=cfg.state_store.cards, now=now)
+            selection = select_next(
+                decks=cfg.decks, state=cfg.state_store.cards, now=now
+            )
             return selection, cfg.session.done_count
 
     @app.get("/")
@@ -137,7 +141,9 @@ def create_app(
         selection, done_count = current_snapshot()
         if card is None:
             if htmx:
-                return render_study(selection=selection, done_count=done_count, revealed=False)
+                return render_study(
+                    selection=selection, done_count=done_count, revealed=False
+                )
             return redirect(url_for("study"))
 
         now = cfg.now_fn()
@@ -160,13 +166,17 @@ def create_app(
         if rating is None:
             if htmx:
                 selection, done_count = current_snapshot()
-                return render_study(selection=selection, done_count=done_count, revealed=False), 400
+                return render_study(
+                    selection=selection, done_count=done_count, revealed=False
+                ), 400
             return redirect(url_for("study"))
 
         if card_key not in cfg.cards_by_key:
             if htmx:
                 selection, done_count = current_snapshot()
-                return render_study(selection=selection, done_count=done_count, revealed=False), 400
+                return render_study(
+                    selection=selection, done_count=done_count, revealed=False
+                ), 400
             return redirect(url_for("study"))
 
         now = cfg.now_fn()
@@ -178,11 +188,15 @@ def create_app(
             )
             cfg.session.done_count += 1
             cfg.state_store.save(now=now)
-            selection = select_next(decks=cfg.decks, state=cfg.state_store.cards, now=now)
+            selection = select_next(
+                decks=cfg.decks, state=cfg.state_store.cards, now=now
+            )
             done_count = cfg.session.done_count
 
         if htmx:
-            return render_study(selection=selection, done_count=done_count, revealed=False)
+            return render_study(
+                selection=selection, done_count=done_count, revealed=False
+            )
         return redirect(url_for("study"))
 
     return app

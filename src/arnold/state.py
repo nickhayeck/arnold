@@ -37,7 +37,9 @@ class StateStore:
         try:
             text = self.path.read_text(encoding="utf-8")
         except OSError as e:
-            raise StateFileError(path=self.path, message=f"Could not read state file: {e}")
+            raise StateFileError(
+                path=self.path, message=f"Could not read state file: {e}"
+            )
 
         try:
             raw = json.loads(text) if text.strip() else {}
@@ -51,16 +53,22 @@ class StateStore:
         elif isinstance(raw, dict):
             cards_obj = raw
         else:
-            raise StateFileError(path=self.path, message="State file must be a JSON object.")
+            raise StateFileError(
+                path=self.path, message="State file must be a JSON object."
+            )
 
         parsed: dict[str, CardState] = {}
         for key, value in cards_obj.items():
             if not isinstance(key, str):
-                raise StateFileError(path=self.path, message="State keys must be strings.")
+                raise StateFileError(
+                    path=self.path, message="State keys must be strings."
+                )
             try:
                 parsed[key] = CardState.from_json(value)
             except Exception as e:  # noqa: BLE001
-                raise StateFileError(path=self.path, message=f"Invalid state for '{key}': {e}")
+                raise StateFileError(
+                    path=self.path, message=f"Invalid state for '{key}': {e}"
+                )
 
         self.cards = parsed
 

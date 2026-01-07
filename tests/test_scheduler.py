@@ -48,7 +48,11 @@ def test_select_next_prefers_due_over_new(tmp_path: Path) -> None:
     deck = Deck(path=deck_path, deck_id="d", name="D", cards=cards)
 
     now = 100
-    state = {cards[1].key: CardState(due=0, interval_days=1.0, ease_factor=2.5, repetitions=1)}
+    state = {
+        cards[1].key: CardState(
+            due=0, interval_days=1.0, ease_factor=2.5, repetitions=1
+        )
+    }
     sel = select_next(decks=[deck], state=state, now=now)
     assert sel.card == cards[1]
     assert sel.due_count == 1
@@ -70,8 +74,9 @@ def test_select_next_returns_none_when_all_future(tmp_path: Path) -> None:
     deck = Deck(path=deck_path, deck_id="d", name="D", cards=(card,))
 
     now = 100
-    state = {card.key: CardState(due=200, interval_days=1.0, ease_factor=2.5, repetitions=1)}
+    state = {
+        card.key: CardState(due=200, interval_days=1.0, ease_factor=2.5, repetitions=1)
+    }
     sel = select_next(decks=[deck], state=state, now=now)
     assert sel.card is None
     assert sel.next_due == 200
-

@@ -94,4 +94,3 @@ def test_load_deck_rejects_non_string_front_back(tmp_path: Path) -> None:
         load_deck(path, deck_index=0)
 
     assert "field 'front' must be a string" in str(excinfo.value)
-
