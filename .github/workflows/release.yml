@@ -1,0 +1,45 @@
+name: Release Artifacts
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build dist
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build
+          sha256sum dist/* > dist/checksums.sha256
+
+      - name: Smoke test wheel
+        run: |
+          python -m venv .venv-wheel
+          . .venv-wheel/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+          python -c "from importlib.resources import files; assert (files('arnold')/'templates'/'study.html').is_file()"
+          arnold --help >/dev/null
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*
+

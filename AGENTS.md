@@ -28,6 +28,7 @@ Disable opening the browser:
 Run unit tests:
 - `pytest`
 - If `pytest` isn’t on PATH: `python -m pytest`
+- Dev install (recommended): `pip install -e ".[dev]"`
 
 Guardrails for tests:
 - Deterministic: inject time (`now`) rather than using real clock.

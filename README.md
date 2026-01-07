@@ -4,6 +4,14 @@ Wouldn't it be nice if Arnold Schwarzenegger had a command-line application that
 ## Why?
 I found Anki too heavyweight, has a bad UI, doesn't natively support json, and isn't built for version control. This is a simpler application designed to remedy those faults.
 
+## Install
+
+Arnold is not published to PyPI (yet). For now, install from GitHub Releases artifacts:
+1. Download the latest `arnold-<version>-py3-none-any.whl` from the Releases page.
+2. Install it with either:
+   - `pipx install ./arnold-<version>-py3-none-any.whl`
+   - `pip install ./arnold-<version>-py3-none-any.whl`
+
 ## Quickstart
 
 Run the app (opens a browser by default):
@@ -74,3 +82,20 @@ Writes are atomic-ish (temp file + replace) to reduce corruption risk.
 - System theme (light/dark) is respected.
 - Top bar shows: `Due`, `New`, and `Done` (done is per-session, resets when the server restarts).
 - Rating buttons are: `Oops / Hard / Medium / Easy`, with a small preview of how long the card will sleep.
+
+## Development
+
+Install in editable mode with dev dependencies:
+```bash
+pip install -e ".[dev]"
+```
+
+Run tests:
+```bash
+python -m pytest
+```
+
+Run lint:
+```bash
+python -m ruff check .
+```
