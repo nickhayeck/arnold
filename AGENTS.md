@@ -60,3 +60,19 @@ Guardrails for tests:
 - State writes should be atomic-ish (temp write then replace).
 - Avoid hidden global state; prefer app factory + dependency injection.
 - No network access in tests; no build tooling for frontend.
+
+## Release Workflow
+
+1. Bump versions in:
+   - `pyproject.toml`
+   - `src/arnold/__init__.py`
+   - `uv.lock` (editable package version)
+2. Update docs/examples as needed.
+3. Validate locally:
+   - `.venv/bin/python -m pytest`
+   - `.venv/bin/python -m ruff check .`
+4. Release:
+   - `git add -A && git commit -m "Release vX.Y.Z"`
+   - `git push`
+   - `git tag -a vX.Y.Z -m "Release vX.Y.Z: <summary>"`
+   - `git push origin vX.Y.Z`

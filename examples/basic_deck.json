@@ -1,7 +1,7 @@
 {
   "name": "Basic Deck",
   "cards": [
-    { "id": 1, "front": "2 + 2 = ?", "back": "4" },
+    { "front": "2 + 2 = ?", "back": "4" },
     {
       "front": "Solve: \\(x^2 = 4\\)",
       "back": "\\(x = \\pm 2\\)",

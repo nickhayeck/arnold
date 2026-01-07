@@ -26,10 +26,10 @@ def compute_deck_id(path: Path) -> str:
     return digest[:12]
 
 
-def _generated_card_id(deck_id: str, front: str, back: str) -> str:
-    raw = f"{deck_id}\n{front}\n{back}".encode("utf-8")
-    digest = hashlib.sha1(raw).hexdigest()
-    return digest[:12]
+def _content_hashed_card_id(front: str, back: str, tags: tuple[str, ...]) -> str:
+    payload = {"back": back, "front": front, "tags": list(tags)}
+    raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+    return hashlib.sha1(raw.encode("utf-8")).hexdigest()
 
 
 def load_deck(path: Path, *, deck_index: int) -> Deck:
@@ -75,7 +75,7 @@ def load_deck(path: Path, *, deck_index: int) -> Deck:
     deck_name = deck_name or path.stem
 
     cards: list[Card] = []
-    seen_ids: dict[str, int] = {}
+    seen_ids: set[str] = set()
 
     for card_index, raw in enumerate(cards_raw):
         if not isinstance(raw, dict):
@@ -84,6 +84,11 @@ def load_deck(path: Path, *, deck_index: int) -> Deck:
 
         front = raw.get("front")
         back = raw.get("back")
+
+        if "id" in raw:
+            errors.append(
+                f"Card {card_index}: field 'id' is deprecated and not allowed; remove it."
+            )
 
         if "front" not in raw:
             errors.append(f"Card {card_index}: missing required field 'front'.")
@@ -95,42 +100,27 @@ def load_deck(path: Path, *, deck_index: int) -> Deck:
         elif not isinstance(back, str):
             errors.append(f"Card {card_index}: field 'back' must be a string.")
 
-        raw_id = raw.get("id")
-        card_id: str | None
-        if raw_id is None:
-            if isinstance(front, str) and isinstance(back, str):
-                card_id = _generated_card_id(deck_id, front, back)
-            else:
-                card_id = None
-        elif isinstance(raw_id, (str, int)):
-            card_id = str(raw_id)
-        else:
-            card_id = None
-            errors.append(
-                f"Card {card_index}: field 'id' must be a string or int when provided."
-            )
-
         tags_raw = raw.get("tags", [])
         tags: tuple[str, ...] = ()
         if tags_raw == []:
             tags = ()
         elif isinstance(tags_raw, list) and all(isinstance(t, str) for t in tags_raw):
-            tags = tuple(tags_raw)
+            tags = tuple(sorted(set(tags_raw)))
         else:
             errors.append(
                 f"Card {card_index}: field 'tags' must be a list of strings when provided."
             )
 
-        if card_id is not None:
-            first_seen = seen_ids.get(card_id)
-            if first_seen is not None:
-                errors.append(
-                    f"Card {card_index}: duplicate id '{card_id}' (already used by card {first_seen})."
-                )
-            else:
-                seen_ids[card_id] = card_index
+        if isinstance(front, str) and isinstance(back, str):
+            card_id = _content_hashed_card_id(front=front, back=back, tags=tags)
+        else:
+            card_id = None
+
+        if card_id is not None and card_id in seen_ids:
+            continue
 
         if isinstance(front, str) and isinstance(back, str) and card_id is not None:
+            seen_ids.add(card_id)
             cards.append(
                 Card(
                     deck_id=deck_id,

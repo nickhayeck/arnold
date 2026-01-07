@@ -46,7 +46,7 @@ Canonical format:
 {
   "name": "Algebra",
   "cards": [
-    { "id": "q1", "front": "2+2?", "back": "4", "tags": ["math"] }
+    { "front": "2+2?", "back": "4", "tags": ["math"] }
   ]
 }
 ```
@@ -60,9 +60,13 @@ Also accepted:
 
 Card fields:
 - Required: `front` (string), `back` (string)
-- Optional: `id` (string|int), `tags` (list of strings)
+- Optional: `tags` (list of strings)
 
-If `id` is omitted, Arnold generates a stable ID from `(resolved deck path + front + back)`.
+Card IDs are derived from the card content: `sha1({front, back, tags})` (with `tags` treated as a set).
+This means editing `front`/`back`/`tags` makes the card "new" again, and duplicate cards are deduped automatically.
+
+Deprecated field:
+- `id` (any type): not allowed; Arnold will error if it is present.
 
 ## Math / LaTeX
 
