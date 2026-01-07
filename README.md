@@ -1,5 +1,5 @@
 # Arnold: Achieve Total Recall
-Wouldn't it be nice if Arnold Schwarzenegger in Total Recall had a command-line application that allowed him to quickly study any topic? If he were born just 78 years later, he could've used `arnold`.
+Wouldn't it be nice if Arnold Schwarzenegger had a command-line application that allowed him to quickly study any topic? If he were born just 78 years later, he could've used `arnold`.
 
 ## Why?
 I found Anki too heavyweight, has a bad UI, doesn't natively support json, and isn't built for version control. This is a simpler application designed to remedy those faults.
