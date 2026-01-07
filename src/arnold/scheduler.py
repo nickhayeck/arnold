@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
-from typing import Callable, Iterable
+from typing import Iterable
 
 from arnold.models import Card, CardState, Deck, Rating, Selection
 
@@ -65,17 +64,6 @@ def apply_rating(*, existing: CardState | None, rating: Rating, now: int) -> Car
     return CardState(due=due, interval_days=interval, ease_factor=ease, repetitions=reps)
 
 
-@dataclass(frozen=True, slots=True)
-class StudyContext:
-    decks: tuple[Deck, ...]
-    state: dict[str, CardState]
-    now: int
-
-    @property
-    def all_cards(self) -> tuple[Card, ...]:
-        return tuple(card for deck in self.decks for card in deck.cards)
-
-
 def select_next(*, decks: Iterable[Deck], state: dict[str, CardState], now: int) -> Selection:
     all_cards = [card for deck in decks for card in deck.cards]
 
@@ -113,17 +101,3 @@ def select_next(*, decks: Iterable[Deck], state: dict[str, CardState], now: int)
         total_count=len(all_cards),
         next_due=next_due,
     )
-
-
-def update_and_select_next(
-    *,
-    decks: Iterable[Deck],
-    state: dict[str, CardState],
-    card_key: str,
-    rating: Rating,
-    now_fn: Callable[[], int] = unix_now,
-) -> Selection:
-    now = now_fn()
-    state[card_key] = apply_rating(existing=state.get(card_key), rating=rating, now=now)
-    return select_next(decks=decks, state=state, now=now)
-

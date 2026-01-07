@@ -3,7 +3,6 @@ from __future__ import annotations
 import threading
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import Callable
 
 from flask import Flask, redirect, render_template, request, url_for
@@ -11,6 +10,13 @@ from flask import Flask, redirect, render_template, request, url_for
 from arnold.models import Card, CardState, Deck, Rating, Selection
 from arnold.scheduler import apply_rating, select_next, unix_now
 from arnold.state import StateStore
+
+RATINGS: dict[str, Rating] = {
+    "again": "again",
+    "hard": "hard",
+    "good": "good",
+    "easy": "easy",
+}
 
 
 def _is_htmx_request() -> bool:
@@ -47,19 +53,19 @@ def _rating_previews(*, existing: CardState | None, now: int) -> dict[Rating, st
     return previews
 
 
+@dataclass(slots=True)
+class SessionStats:
+    done_count: int = 0
+
+
 @dataclass(frozen=True, slots=True)
 class AppConfig:
     decks: tuple[Deck, ...]
     state_store: StateStore
     state_lock: threading.Lock
-    session: "SessionStats"
+    session: SessionStats
     now_fn: Callable[[], int]
     cards_by_key: dict[str, Card]
-
-
-@dataclass(slots=True)
-class SessionStats:
-    done_count: int = 0
 
 
 def create_app(
@@ -92,17 +98,16 @@ def create_app(
         revealed_card: Card | None = None,
         rating_previews: dict[Rating, str] | None = None,
     ):
+        htmx = _is_htmx_request()
         card = revealed_card if revealed else selection.card
         next_due_str = (
             _format_local_time(selection.next_due) if selection.next_due is not None else None
         )
 
-        template = "study_pane.html" if _is_htmx_request() else "study.html"
+        template = "study_pane.html" if htmx else "study.html"
         return render_template(
             template,
-            htmx=_is_htmx_request(),
-            deck_count=len(cfg.decks),
-            total_count=selection.total_count,
+            htmx=htmx,
             due_count=selection.due_count,
             new_count=selection.new_count,
             done_count=done_count,
@@ -125,12 +130,13 @@ def create_app(
 
     @app.post("/reveal")
     def reveal() -> str:
+        htmx = _is_htmx_request()
         card_key = request.form.get("card_key", "")
         card = cfg.cards_by_key.get(card_key)
 
         selection, done_count = current_snapshot()
         if card is None:
-            if _is_htmx_request():
+            if htmx:
                 return render_study(selection=selection, done_count=done_count, revealed=False)
             return redirect(url_for("study"))
 
@@ -148,19 +154,17 @@ def create_app(
 
     @app.post("/rate")
     def rate():
+        htmx = _is_htmx_request()
         card_key = request.form.get("card_key", "")
-        rating_raw = request.form.get("rating", "")
-        rating: Rating
-        if rating_raw in ("again", "hard", "good", "easy"):
-            rating = rating_raw  # type: ignore[assignment]
-        else:
-            if _is_htmx_request():
+        rating = RATINGS.get(request.form.get("rating", ""))
+        if rating is None:
+            if htmx:
                 selection, done_count = current_snapshot()
                 return render_study(selection=selection, done_count=done_count, revealed=False), 400
             return redirect(url_for("study"))
 
         if card_key not in cfg.cards_by_key:
-            if _is_htmx_request():
+            if htmx:
                 selection, done_count = current_snapshot()
                 return render_study(selection=selection, done_count=done_count, revealed=False), 400
             return redirect(url_for("study"))
@@ -177,12 +181,8 @@ def create_app(
             selection = select_next(decks=cfg.decks, state=cfg.state_store.cards, now=now)
             done_count = cfg.session.done_count
 
-        if _is_htmx_request():
+        if htmx:
             return render_study(selection=selection, done_count=done_count, revealed=False)
         return redirect(url_for("study"))
 
     return app
-
-
-def default_state_path() -> Path:
-    return Path("arnold_state.json")
