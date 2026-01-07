@@ -22,7 +22,6 @@ class StateFileError(Exception):
 class StateStore:
     path: Path
     cards: dict[str, CardState] = field(default_factory=dict)
-    reviews_done: int = 0
 
     @classmethod
     def load(cls, path: Path) -> StateStore:
@@ -48,15 +47,6 @@ class StateStore:
 
         cards_obj: Any
         if isinstance(raw, dict) and isinstance(raw.get("cards"), dict):
-            reviews_done = raw.get("reviews_done", 0)
-            if reviews_done is None:
-                reviews_done = 0
-            if not isinstance(reviews_done, int):
-                raise StateFileError(
-                    path=self.path,
-                    message="Field 'reviews_done' must be an integer when present.",
-                )
-            self.reviews_done = reviews_done
             cards_obj = raw["cards"]
         elif isinstance(raw, dict):
             cards_obj = raw
@@ -84,7 +74,6 @@ class StateStore:
         payload = {
             "version": 1,
             "updated_at": now,
-            "reviews_done": self.reviews_done,
             "cards": {k: v.to_json() for k, v in sorted(self.cards.items())},
         }
 

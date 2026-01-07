@@ -15,8 +15,11 @@
     <script>
       window.MathJax = {
         tex: {
-          inlineMath: [["\\\\(", "\\\\)"]],
-          displayMath: [["$$", "$$"]],
+          inlineMath: [["\\(", "\\)"]],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
         },
       };
     </script>
@@ -115,11 +118,22 @@
       .button-row--ratings button {
         flex: 1 1 0;
         min-width: 6rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.15rem;
       }
 
       .button-row--solo :is(button, a[role="button"]) {
         flex: 0 1 25%;
         min-width: 6rem;
+      }
+
+      .btn-hint {
+        font-size: 0.75rem;
+        font-weight: 500;
+        opacity: 0.82;
       }
 
       .btn-again {
@@ -152,7 +166,7 @@
       <div class="container topbar__inner">
         <a class="topbar__brand" href="{{ url_for('study') }}">Arnold</a>
         <div id="topbar-stats" class="topbar__stats muted">
-          Due {{ due_count }} · New {{ new_count }} · Done {{ done_count }} / {{ total_count }}
+          Due {{ due_count }} · New {{ new_count }} · Done {{ done_count }}
         </div>
         <div></div>
       </div>

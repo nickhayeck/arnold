@@ -8,7 +8,7 @@ from typing import Callable
 
 from flask import Flask, redirect, render_template, request, url_for
 
-from arnold.models import Card, Deck, Rating, Selection
+from arnold.models import Card, CardState, Deck, Rating, Selection
 from arnold.scheduler import apply_rating, select_next, unix_now
 from arnold.state import StateStore
 
@@ -18,7 +18,33 @@ def _is_htmx_request() -> bool:
 
 
 def _format_local_time(ts: int) -> str:
-    return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %I:%M %p")
+
+
+def _format_sleep_seconds(seconds: int) -> str:
+    seconds = max(0, int(seconds))
+    if seconds < 90:
+        return "1m"
+    if seconds < 60 * 60:
+        minutes = max(1, int(round(seconds / 60)))
+        return f"{minutes}m"
+    if seconds < 24 * 60 * 60:
+        hours = max(1, int(round(seconds / (60 * 60))))
+        return f"{hours}h"
+    days = seconds / (24 * 60 * 60)
+    rounded = round(days)
+    if abs(days - rounded) >= 0.05 and days < 10:
+        return f"{days:.1f}d".rstrip("0").rstrip(".")
+    return f"{max(1, int(rounded))}d"
+
+
+def _rating_previews(*, existing: CardState | None, now: int) -> dict[Rating, str]:
+    previews: dict[Rating, str] = {}
+    ratings: tuple[Rating, ...] = ("again", "hard", "good", "easy")
+    for rating in ratings:
+        next_state = apply_rating(existing=existing, rating=rating, now=now)
+        previews[rating] = _format_sleep_seconds(next_state.due - now)
+    return previews
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,8 +52,14 @@ class AppConfig:
     decks: tuple[Deck, ...]
     state_store: StateStore
     state_lock: threading.Lock
+    session: "SessionStats"
     now_fn: Callable[[], int]
     cards_by_key: dict[str, Card]
+
+
+@dataclass(slots=True)
+class SessionStats:
+    done_count: int = 0
 
 
 def create_app(
@@ -47,6 +79,7 @@ def create_app(
         decks=tuple(decks),
         state_store=state_store,
         state_lock=threading.Lock(),
+        session=SessionStats(),
         now_fn=now_fn,
         cards_by_key=cards_by_key,
     )
@@ -57,6 +90,7 @@ def create_app(
         done_count: int,
         revealed: bool = False,
         revealed_card: Card | None = None,
+        rating_previews: dict[Rating, str] | None = None,
     ):
         card = revealed_card if revealed else selection.card
         next_due_str = (
@@ -75,13 +109,14 @@ def create_app(
             card=card,
             revealed=revealed,
             next_due_str=next_due_str,
+            rating_previews=rating_previews,
         )
 
     def current_snapshot() -> tuple[Selection, int]:
         now = cfg.now_fn()
         with cfg.state_lock:
             selection = select_next(decks=cfg.decks, state=cfg.state_store.cards, now=now)
-            return selection, cfg.state_store.reviews_done
+            return selection, cfg.session.done_count
 
     @app.get("/")
     def study() -> str:
@@ -99,11 +134,16 @@ def create_app(
                 return render_study(selection=selection, done_count=done_count, revealed=False)
             return redirect(url_for("study"))
 
+        now = cfg.now_fn()
+        with cfg.state_lock:
+            existing = cfg.state_store.cards.get(card_key)
+
         return render_study(
             selection=selection,
             done_count=done_count,
             revealed=True,
             revealed_card=card,
+            rating_previews=_rating_previews(existing=existing, now=now),
         )
 
     @app.post("/rate")
@@ -132,10 +172,10 @@ def create_app(
                 rating=rating,
                 now=now,
             )
-            cfg.state_store.reviews_done += 1
+            cfg.session.done_count += 1
             cfg.state_store.save(now=now)
             selection = select_next(decks=cfg.decks, state=cfg.state_store.cards, now=now)
-            done_count = cfg.state_store.reviews_done
+            done_count = cfg.session.done_count
 
         if _is_htmx_request():
             return render_study(selection=selection, done_count=done_count, revealed=False)

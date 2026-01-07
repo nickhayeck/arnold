@@ -11,10 +11,8 @@ def test_state_store_save_and_load_round_trip(tmp_path: Path) -> None:
     path = tmp_path / "state.json"
     store = StateStore.load(path)
     assert store.cards == {}
-    assert store.reviews_done == 0
 
     store.set("deck:card", CardState(due=123, interval_days=1.0, ease_factor=2.5, repetitions=1))
-    store.reviews_done = 7
     store.save(now=999)
 
     assert path.exists()
@@ -22,7 +20,6 @@ def test_state_store_save_and_load_round_trip(tmp_path: Path) -> None:
 
     store2 = StateStore.load(path)
     assert store2.get("deck:card") == CardState(due=123, interval_days=1.0, ease_factor=2.5, repetitions=1)
-    assert store2.reviews_done == 7
 
 
 def test_state_store_rejects_invalid_json(tmp_path: Path) -> None:

@@ -1,6 +1,6 @@
 {% if htmx %}
   <div id="topbar-stats" class="topbar__stats muted" hx-swap-oob="true">
-    Due {{ due_count }} · New {{ new_count }} · Done {{ done_count }} / {{ total_count }}
+    Due {{ due_count }} · New {{ new_count }} · Done {{ done_count }}
   </div>
 {% endif %}
 
@@ -23,10 +23,22 @@
           >
             <input type="hidden" name="card_key" value="{{ card.key }}" />
             <div class="button-row button-row--ratings">
-              <button class="btn-again" type="submit" name="rating" value="again">Again</button>
-              <button class="btn-hard" type="submit" name="rating" value="hard">Hard</button>
-              <button class="btn-good" type="submit" name="rating" value="good">Good</button>
-              <button class="btn-easy" type="submit" name="rating" value="easy">Easy</button>
+              <button class="btn-again" type="submit" name="rating" value="again">
+                <span>Oops</span>
+                <span class="btn-hint">{{ rating_previews["again"] }}</span>
+              </button>
+              <button class="btn-hard" type="submit" name="rating" value="hard">
+                <span>Hard</span>
+                <span class="btn-hint">{{ rating_previews["hard"] }}</span>
+              </button>
+              <button class="btn-good" type="submit" name="rating" value="good">
+                <span>Medium</span>
+                <span class="btn-hint">{{ rating_previews["good"] }}</span>
+              </button>
+              <button class="btn-easy" type="submit" name="rating" value="easy">
+                <span>Easy</span>
+                <span class="btn-hint">{{ rating_previews["easy"] }}</span>
+              </button>
             </div>
           </form>
         </div>
