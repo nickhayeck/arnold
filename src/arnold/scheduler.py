@@ -10,16 +10,19 @@ MIN_EASE = 1.3
 
 
 def unix_now() -> int:
+    """Return the current unix timestamp in seconds."""
     return int(time.time())
 
 
 def default_state(*, now: int) -> CardState:
+    """Return the initial scheduling state for a new card."""
     return CardState(
         due=now, interval_days=0.0, ease_factor=DEFAULT_EASE, repetitions=0
     )
 
 
 def apply_rating(*, existing: CardState | None, rating: Rating, now: int) -> CardState:
+    """Apply a rating to the existing state and return the next state."""
     state = existing if existing is not None else default_state(now=now)
 
     ease = state.ease_factor
@@ -71,6 +74,7 @@ def apply_rating(*, existing: CardState | None, rating: Rating, now: int) -> Car
 def select_next(
     *, decks: Iterable[Deck], state: dict[str, CardState], now: int
 ) -> Selection:
+    """Pick the next card to study, preferring due cards over new cards."""
     all_cards = [card for deck in decks for card in deck.cards]
 
     due_candidates: list[tuple[int, tuple[int, int], Card]] = []

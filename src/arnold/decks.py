@@ -20,19 +20,39 @@ class DeckValidationError(Exception):
         return "\n".join(lines)
 
 
-def compute_deck_id(path: Path) -> str:
-    resolved = path.expanduser().resolve()
-    digest = hashlib.sha1(str(resolved).encode("utf-8")).hexdigest()
+def compute_deck_id(resolved_path: Path) -> str:
+    """Return a stable deck ID derived from the resolved deck path.
+
+    This is used as a namespace prefix for state keys so two different files can
+    contain identical cards without colliding.
+    """
+    digest = hashlib.sha1(str(resolved_path).encode("utf-8")).hexdigest()
     return digest[:12]
 
 
 def _content_hashed_card_id(front: str, back: str, tags: tuple[str, ...]) -> str:
+    """Return the canonical card ID: sha1 of (front, back, tags).
+
+    `tags` must already be normalized (sorted/deduped) so tag ordering does not
+    affect identity.
+    """
     payload = {"back": back, "front": front, "tags": list(tags)}
     raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
     return hashlib.sha1(raw.encode("utf-8")).hexdigest()
 
 
 def load_deck(path: Path, *, deck_index: int) -> Deck:
+    """Load and validate a deck from disk.
+
+    Accepted formats:
+    - Object format: `{ "name": "...", "cards": [...] }`
+    - Array format: `[...]` (cards only)
+
+    Notes:
+    - The `id` card field is deprecated and rejected.
+    - Card IDs are derived from content (`front`, `back`, `tags`).
+    - Duplicate cards (same content) are deduped at load time.
+    """
     errors: list[str] = []
 
     try:
@@ -71,7 +91,8 @@ def load_deck(path: Path, *, deck_index: int) -> Deck:
             errors=("Top-level field 'cards' must be an array.",),
         )
 
-    deck_id = compute_deck_id(path)
+    resolved_path = path.expanduser().resolve()
+    deck_id = compute_deck_id(resolved_path)
     deck_name = deck_name or path.stem
 
     cards: list[Card] = []
@@ -129,7 +150,7 @@ def load_deck(path: Path, *, deck_index: int) -> Deck:
                     back=back,
                     tags=tags,
                     deck_name=deck_name,
-                    deck_path=path.expanduser().resolve(),
+                    deck_path=resolved_path,
                     order=(deck_index, card_index),
                 )
             )
@@ -141,6 +162,7 @@ def load_deck(path: Path, *, deck_index: int) -> Deck:
 
 
 def load_decks(paths: list[Path]) -> tuple[list[Deck], list[DeckValidationError]]:
+    """Load many decks, collecting per-file validation failures."""
     decks: list[Deck] = []
     failures: list[DeckValidationError] = []
     for idx, path in enumerate(paths):

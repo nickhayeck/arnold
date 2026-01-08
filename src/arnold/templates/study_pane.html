@@ -10,7 +10,14 @@
       <div class="study-card__deck">{{ card.deck_name }}</div>
       <div class="study-card__text">{{ card.front }}</div>
 
-      {% if revealed %}
+      {% if mode == "history" %}
+        <div class="study-card__meta muted">
+          History {{ history_len - history_cursor + 1 }}/{{ history_len }}
+        </div>
+        <div class="study-card__answer">
+          <div class="study-card__text">{{ card.back }}</div>
+        </div>
+      {% elif revealed %}
         <div class="study-card__answer">
           <div class="study-card__text">{{ card.back }}</div>
 
@@ -23,19 +30,43 @@
           >
             <input type="hidden" name="card_key" value="{{ card.key }}" />
             <div class="button-row button-row--ratings">
-              <button class="btn-again" type="submit" name="rating" value="again">
+              <button
+                class="btn-again"
+                type="submit"
+                name="rating"
+                value="again"
+                data-hotkey="1"
+              >
                 <span>Oops</span>
                 <span class="btn-hint">{{ rating_previews["again"] }}</span>
               </button>
-              <button class="btn-hard" type="submit" name="rating" value="hard">
+              <button
+                class="btn-hard"
+                type="submit"
+                name="rating"
+                value="hard"
+                data-hotkey="2"
+              >
                 <span>Hard</span>
                 <span class="btn-hint">{{ rating_previews["hard"] }}</span>
               </button>
-              <button class="btn-good" type="submit" name="rating" value="good">
+              <button
+                class="btn-good"
+                type="submit"
+                name="rating"
+                value="good"
+                data-hotkey="3"
+              >
                 <span>Medium</span>
                 <span class="btn-hint">{{ rating_previews["good"] }}</span>
               </button>
-              <button class="btn-easy" type="submit" name="rating" value="easy">
+              <button
+                class="btn-easy"
+                type="submit"
+                name="rating"
+                value="easy"
+                data-hotkey="4"
+              >
                 <span>Easy</span>
                 <span class="btn-hint">{{ rating_previews["easy"] }}</span>
               </button>
@@ -52,7 +83,7 @@
         >
           <input type="hidden" name="card_key" value="{{ card.key }}" />
           <div class="button-row button-row--solo">
-            <button type="submit">Show answer</button>
+            <button type="submit" data-hotkey="space">Show answer</button>
           </div>
         </form>
       {% endif %}
@@ -68,4 +99,42 @@
       </div>
     {% endif %}
   </article>
+
+  <div class="study-nav">
+    <form
+      method="post"
+      action="{{ url_for('history_back') }}"
+      hx-post="{{ url_for('history_back') }}"
+      hx-target="#study-pane"
+      hx-swap="outerHTML"
+    >
+      <button type="submit" data-hotkey="b" {% if not can_go_back %}disabled{% endif %}>
+        Back
+      </button>
+    </form>
+
+    {% if can_go_next %}
+      <form
+        method="post"
+        action="{{ url_for('history_next') }}"
+        hx-post="{{ url_for('history_next') }}"
+        hx-target="#study-pane"
+        hx-swap="outerHTML"
+      >
+        <button type="submit" data-hotkey="n">Next</button>
+      </form>
+    {% endif %}
+
+    <form
+      method="post"
+      action="{{ url_for('undo') }}"
+      hx-post="{{ url_for('undo') }}"
+      hx-target="#study-pane"
+      hx-swap="outerHTML"
+    >
+      <button type="submit" data-hotkey="u" {% if not can_undo %}disabled{% endif %}>
+        Undo
+      </button>
+    </form>
+  </div>
 </div>

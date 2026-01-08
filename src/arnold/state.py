@@ -25,6 +25,11 @@ class StateStore:
 
     @classmethod
     def load(cls, path: Path) -> StateStore:
+        """Load a state store from disk.
+
+        Accepts both the current `{ "version": ..., "cards": {...} }` format and a
+        legacy flat mapping of `{ "<deck>:<card>": { ...state... } }`.
+        """
         store = cls(path=path)
         store._load_from_disk()
         return store
@@ -79,6 +84,7 @@ class StateStore:
         self.cards[key] = state
 
     def save(self, *, now: int) -> None:
+        """Persist state to disk using a temp file + replace (atomic-ish)."""
         payload = {
             "version": 1,
             "updated_at": now,

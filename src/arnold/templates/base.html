@@ -101,6 +101,11 @@
         border-top: 1px solid var(--pico-muted-border-color);
       }
 
+      .study-card__meta {
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
+      }
+
       .button-row {
         margin-top: 1.5rem;
         display: flex;
@@ -159,6 +164,29 @@
         border-color: #4c8bf5;
         color: #ffffff;
       }
+
+      .study-nav {
+        position: fixed;
+        left: 1rem;
+        bottom: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        z-index: 10;
+      }
+
+      .study-nav form {
+        margin: 0;
+      }
+
+      .study-nav button {
+        padding: 0.55rem 0.8rem;
+        border-radius: 0.55rem;
+        font-weight: 600;
+      }
+
+      .study-nav button[disabled] {
+        opacity: 0.55;
+      }
     </style>
   </head>
   <body>
@@ -181,6 +209,44 @@
           MathJax.typesetPromise([evt.target]);
         }
       });
+    </script>
+
+    <script>
+      (function () {
+        function isInteractiveTarget(target) {
+          if (!target) return false;
+          return Boolean(
+            target.closest(
+              "input, textarea, select, button, a, [contenteditable='true']"
+            )
+          );
+        }
+
+        function normalizeHotkey(evt) {
+          if (evt.key === " " || evt.code === "Space") return "space";
+          const key = evt.key.toLowerCase();
+          if (key === "u" || key === "b" || key === "n") return key;
+          if (key === "1" || key === "2" || key === "3" || key === "4") return key;
+          return null;
+        }
+
+        document.addEventListener("keydown", function (evt) {
+          if (evt.defaultPrevented) return;
+          if (evt.metaKey || evt.ctrlKey || evt.altKey) return;
+          if (isInteractiveTarget(evt.target)) return;
+
+          const hotkey = normalizeHotkey(evt);
+          if (!hotkey) return;
+
+          const btn = document.querySelector(
+            '#study-pane button[data-hotkey="' + hotkey + '"]:not([disabled])'
+          );
+          if (!btn) return;
+
+          evt.preventDefault();
+          btn.click();
+        });
+      })();
     </script>
   </body>
 </html>

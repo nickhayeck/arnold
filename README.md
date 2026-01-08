@@ -86,6 +86,12 @@ Writes are atomic-ish (temp file + replace) to reduce corruption risk.
 - System theme (light/dark) is respected.
 - Top bar shows: `Due`, `New`, and `Done` (done is per-session, resets when the server restarts).
 - Rating buttons are: `Oops / Hard / Medium / Easy`, with a small preview of how long the card will sleep.
+- Keyboard shortcuts:
+  - `Space`: reveal
+  - `1`-`4`: rate
+  - `u`: undo last rating
+  - `b`: back through answered cards (this session)
+  - `n`: forward in history
 
 ## Development
 
